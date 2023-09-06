@@ -6,7 +6,6 @@ from app.callbacks import register_callbacks
 if __name__ == '__main__':
     loader = Loader()
     df = loader.get_data()
-    print(df.head())
     app = dash.Dash(__name__)
     layout = Layout(df)
     app.layout = layout.create_layout()

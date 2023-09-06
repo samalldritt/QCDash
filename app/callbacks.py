@@ -1,11 +1,12 @@
 import dash
 from dash.dependencies import Input, Output
 import plotly.express as px
+import plotly.graph_objs as go
 import pandas as pd
 import numpy as np
 
 
-def update_histogram_count(selected_data: dict, df: pd.DataFrame):
+def update_pie_chart_count(selected_data: dict, df: pd.DataFrame):
 
     df = df.drop_duplicates(subset=['Subject', 'Session'])
 
@@ -19,19 +20,141 @@ def update_histogram_count(selected_data: dict, df: pd.DataFrame):
     filtered_df['QC Status'] = np.where(
         filtered_df['Output QC'] == 1, "Success", "Failed")
 
-    fig = px.histogram(
-        filtered_df,
-        x='QC Status',
-        labels={'QC Status': 'QC Status'},
-        title='Success/Fail Distribution',
-        category_orders={"QC Status": ["Failed", "Success"]}
+    # Count the number of "Success" and "Failed"
+    qc_status_counts = filtered_df['QC Status'].value_counts()
+
+    # Create a Pie Chart
+    fig = px.pie(
+        qc_status_counts,
+        values=qc_status_counts.values,
+        names=qc_status_counts.index,
+        title='Success/Fail Distribution'
     )
 
-    # Update the title position and margin
     fig.update_layout(
-        title_x=0.5,  # Center the title horizontally
-        title_y=0.95,  # Position the title closer to the top
-        margin=dict(t=40)  # Add top margin for the title
+        plot_bgcolor='#ffffff',  # Set the background color inside the pie chart
+        paper_bgcolor='#ffffff',  # Set the background color outside the pie chart
+    )
+
+    return fig
+
+
+def total_subjects_pie_chart_count(selected_data: dict, df: pd.DataFrame):
+    df = df.drop_duplicates(subset=['Subject'])
+    if selected_data is not None:
+        selected_points = [point['x'] for point in selected_data['points']]
+        filtered_df = df[df['Output QC'].isin(selected_points)]
+    else:
+        filtered_df = df
+    filtered_df['QC Status'] = np.where(
+        filtered_df['Output QC'] == 1, "Success", "Failed")
+    qc_status_counts = filtered_df['QC Status'].value_counts()
+    print(qc_status_counts)
+    outer_pie = go.Pie(
+        values=[qc_status_counts[0], qc_status_counts[1]],
+        hole=1,
+        textinfo='none'
+    )
+    inner_pie = go.Pie(
+        values=[qc_status_counts[0], qc_status_counts[1]],
+        hole=0.8,
+        textinfo='none'
+    )
+    layout = go.Layout(
+        showlegend=False,
+    )
+    fig = go.Figure(data=[outer_pie, inner_pie], layout=layout)
+    fig.update_layout(
+        width=90,  # Minimum width
+        height=90,  # Minimum height
+        margin=dict(l=10, r=10, t=10, b=10),  # Adjust margins for spacing
+        autosize=False,  # Disable autosizing
+    )
+    return fig
+
+
+def total_sessions_pie_chart_count(selected_data: dict, df: pd.DataFrame):
+    df = df.drop_duplicates(subset=['Subject', 'Session'])
+    if selected_data is not None:
+        selected_points = [point['x'] for point in selected_data['points']]
+        filtered_df = df[df['Output QC'].isin(selected_points)]
+    else:
+        filtered_df = df
+    filtered_df['QC Status'] = np.where(
+        filtered_df['Output QC'] == 1, "Success", "Failed")
+    qc_status_counts = filtered_df['QC Status'].value_counts()
+    print(qc_status_counts)
+    outer_pie = go.Pie(
+        values=[qc_status_counts[0], qc_status_counts[1]],
+        hole=1,
+        textinfo='none'
+    )
+    inner_pie = go.Pie(
+        values=[qc_status_counts[0], qc_status_counts[1]],
+        hole=0.8,
+        textinfo='none'
+    )
+    layout = go.Layout(
+        showlegend=False,
+    )
+    fig = go.Figure(data=[outer_pie, inner_pie], layout=layout)
+    fig.update_layout(
+        width=90,  # Minimum width
+        height=90,  # Minimum height
+        margin=dict(l=10, r=10, t=10, b=10),  # Adjust margins for spacing
+        autosize=False,  # Disable autosizing
+    )
+    return fig
+
+
+def total_images_pie_chart_count(selected_data: dict, df: pd.DataFrame):
+    if selected_data is not None:
+        selected_points = [point['x'] for point in selected_data['points']]
+        filtered_df = df[df['Output QC'].isin(selected_points)]
+    else:
+        filtered_df = df
+    filtered_df['QC Status'] = np.where(
+        filtered_df['Output QC'] == 1, "Success", "Failed")
+    qc_status_counts = filtered_df['QC Status'].value_counts()
+    print(qc_status_counts)
+    outer_pie = go.Pie(
+        values=[qc_status_counts[0], qc_status_counts[1]],
+        hole=1,
+        textinfo='none'
+    )
+    inner_pie = go.Pie(
+        values=[qc_status_counts[0], qc_status_counts[1]],
+        hole=0.8,
+        textinfo='none'
+    )
+    layout = go.Layout(
+        showlegend=False,
+    )
+    fig = go.Figure(data=[outer_pie, inner_pie], layout=layout)
+    fig.update_layout(
+        width=90,  # Minimum width
+        height=90,  # Minimum height
+        margin=dict(l=10, r=10, t=10, b=10),  # Adjust margins for spacing
+        autosize=False,  # Disable autosizing
+    )
+    return fig
+
+
+def update_site_distribution(selected_data: dict, df: pd.DataFrame):
+
+    median_age_by_site = df.groupby('Site')['Age'].median().reset_index()
+    sorted_sites = median_age_by_site.sort_values(by='Age')["Site"].tolist()
+
+    # Sort the DataFrame by the sorted site order
+    df['Site'] = pd.Categorical(
+        df['Site'], categories=sorted_sites, ordered=True)
+    df.sort_values('Site', inplace=True)
+
+    fig = px.box(
+        df,
+        x='Site',
+        y='Age',
+        category_orders={"Site": sorted_sites}
     )
 
     return fig
@@ -40,8 +163,28 @@ def update_histogram_count(selected_data: dict, df: pd.DataFrame):
 def register_callbacks(app: dash.Dash, df: pd.DataFrame):
 
     app.callback(
-        Output('histogram_count', 'figure'),
-        [Input('histogram_count', 'selectedData')]
-    )(lambda selected_data: update_histogram_count(selected_data, df))
+        Output('pie_chart_count', 'figure'),
+        [Input('pie_chart_count', 'selectedData')]
+    )(lambda selected_data: update_pie_chart_count(selected_data, df))
+
+    app.callback(
+        Output('total_subjects_pie', 'figure'),
+        [Input('total_subjects_pie', 'selectedData')]
+    )(lambda selected_data: total_subjects_pie_chart_count(selected_data, df))
+
+    app.callback(
+        Output('total_sessions_pie', 'figure'),
+        [Input('total_sessions_pie', 'selectedData')]
+    )(lambda selected_data: total_sessions_pie_chart_count(selected_data, df))
+
+    app.callback(
+        Output('total_images_pie', 'figure'),
+        [Input('total_images_pie', 'selectedData')]
+    )(lambda selected_data: total_images_pie_chart_count(selected_data, df))
+
+    app.callback(
+        Output('site_distribution', 'figure'),
+        [Input('site_distribution', 'selectedData')]
+    )(lambda selected_data: update_site_distribution(selected_data, df))
 
     return

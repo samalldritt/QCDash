@@ -21,20 +21,19 @@ class Layout:
                 rel='stylesheet', href='/assets/styles.css'),
             self.title(),
             self.line_sep(),
-            # self.summary_subject_count(),
-            # self.summary_session_count(),
-            # self.summary_image_count(),
             self.count_pie_chart(),
             self.site_distribution(),
-            self.create_summary()
+            self.create_summary(),
+            self.sex_bar_plot(),
+            self.site_failed_qc()
         ], style={'position': 'relative'})
         return layout
 
     def title(self) -> html.Div:
         div = html.Div([
             html.H1("PRIME-DE QC Structural", style={'font-weight': 'bold', 'font-family': 'Avenir Next'})],
-            style={'position': 'absolute',
-                   'top': '5px', 'left': '540px'}
+            style={'display': 'flex',
+                   'justify-content': 'center'}
         )
         return div
 
@@ -42,29 +41,10 @@ class Layout:
         div = html.Div([
             html.Hr(
                 style={'border-color': '#1d4b73',
-                       'top': '80px',
-                       'left': '5%',
-                       'right': '5%',
-                       'position': 'absolute'}
+                       'display': 'flex',
+                       'justify-content': 'center'}
             )
         ])
-        return div
-
-    def summary_session_count(self) -> html.Div:
-        df_unique = self.df.drop_duplicates(subset=['Subject', 'Session'])
-        unique_subject_session_count = df_unique.shape[0]
-        div = html.Div([
-            html.H2(f"Total Sessions: {unique_subject_session_count}", style={
-                    'font-family': 'Avenir Next'})
-        ], style={'position': 'absolute', 'top': '80px', 'left': '10px'})
-        return div
-
-    def summary_image_count(self) -> html.Div:
-        df_length = len(self.df)
-        div = html.Div([
-            html.H2(f"Total Images: {df_length}", style={
-                    'font-family': 'Avenir Next'})
-        ], style={'position': 'absolute', 'top': '110px', 'left': '10px'})
         return div
 
     def count_pie_chart(self) -> html.Div:
@@ -73,14 +53,18 @@ class Layout:
                 id='pie_chart_count',
                 config={'displayModeBar': False},
                 style={
-                    'height': '400px',
-                    'width': '400px',
+                    'height': '28vw',
+                    'width': '28vw',
                     'margin': '2px',
                     'border': '2px solid',
                     'border-color': '#333'
                 }
             )
-        ], style={'position': 'absolute', 'top': '150px', 'left': '20px'})
+        ], style={
+            'position': 'absolute',
+            'top': '15vh',
+            'left': '2vw'
+        })
         return div
 
     def site_distribution(self) -> html.Div:
@@ -89,94 +73,128 @@ class Layout:
                 id='site_distribution',
                 config={'displayModeBar': False},
                 style={
-                    'height': '400px',
-                    'width': '950px',
+                    'height': '28vw',
+                    'width': '65vw',
                     'margin': '2px',
                     'border': '2px solid',
                     'border-color': '#333'
                 }
             )
-        ], style={'position': 'absolute', 'top': '150px', 'right': '20px'})
+        ], style={'position': 'absolute',
+                  'top': '15vh',
+                  'right': '2vw'
+                  })
         return div
 
     def create_summary(self) -> html.Div:
-        unique_subject_count = len(self.df['Subject'].unique())
-        df_unique = self.df.drop_duplicates(subset=['Subject', 'Session'])
-        unique_subject_session_count = df_unique.shape[0]
-        df_length = len(self.df)
         div = html.Div(
             children=[
-                html.P(f"Total Subjects:",
+                html.P(f"Subjects:",
                        style={
                            'font-family': 'Avenir Next',
                            'color': '#1d4b73',
                            'position': 'absolute',
-                           'top': '0%',
-                           'left': '7%',
+                           'top': '0vh',
+                           'left': '4vw',
                            'font-weight': 'bold',
                            'font-size': '20px'}),
                 dcc.Graph(
                     id='total_subjects_pie',
                     config={'displayModeBar': False},
                     style={
-                        'height': '100px',
-                        'width': '100px',
                         'position': 'absolute',
-                        'top': '30%',
-                        'left': '11%'
+                        'top': '7vh',
+                        'left': '6vw'
                     }
                 ),
-                html.P(f"Total Sessions:",
+                html.P(f"Sessions:",
                        style={
                            'font-family': 'Avenir Next',
                            'color': '#1d4b73',
-                           'position': 'absolute',
-                           'top': '0%',
-                           'left': '38%',
+                           'position': 'relative',
+                           'top': '0vh',
+                           'left': '22vw',
                            'font-weight': 'bold',
                            'font-size': '20px'}),
                 dcc.Graph(
                     id='total_sessions_pie',
                     config={'displayModeBar': False},
                     style={
-                        'height': '1000px',
-                        'width': '1000px',
                         'position': 'absolute',
-                        'top': '30%',
-                        'left': '42%'
+                        'top': '7vh',
+                        'left': '24vw'
                     }
                 ),
-                html.P(f"Total Images:",
+                html.P(f"Images:",
                        style={
                            'font-family': 'Avenir Next',
                            'color': '#1d4b73',
                            'position': 'absolute',
-                           'top': '0',
-                           'left': '70%',
+                           'top': '0vh',
+                           'left': '40vw',
                            'font-weight': 'bold',
                            'font-size': '20px'}),
                 dcc.Graph(
                     id='total_images_pie',
                     config={'displayModeBar': False},
                     style={
-                        'height': '1000px',
-                        'width': '1000px',
                         'position': 'absolute',
-                        'top': '30%',
-                        'left': '73%'
+                        'top': '7vh',
+                        'left': '40vw'
                     }
                 )
             ],
             style={
-                'height': '150px',
-                'width': '600px',
+                'height': '26vh',
+                'width': '55vw',
                 'margin': '2px',
                 'border': '2px solid',
                 'border-color': '#333',
                 'position': 'absolute',
-                'top': '570px',
-                'left': '20px',
+                'top': '80vh',
+                'left': '2vw',
                 'backgroundColor': '#ffffff'
             }
         )
+        return div
+
+    def sex_bar_plot(self) -> html.Div:
+        div = html.Div([
+            dcc.Graph(
+                id='sex_bar_plot',
+                config={'displayModeBar': False},
+                style={
+                    'height': '31.5vw',  # Set initial height using viewport width units
+                    'width': '35vw',   # Set initial width using viewport width units
+                    'margin': '2px',
+                    'border': '2px solid',
+                    'border-color': '#333'
+                }
+            )
+        ], style={
+            'position': 'absolute',
+            'top': '80vh',   # Set initial top position using viewport height units
+            'right': '2vw'   # Set initial right position using viewport width units
+        })
+
+        return div
+
+    def site_failed_qc(self) -> html.Div:
+        div = html.Div([
+            dcc.Graph(
+                id='site_failed_qc',
+                config={'displayModeBar': False},
+                style={
+                    'height': '28vh',
+                    'width': '55vw',
+                    'margin': '2px',
+                    'border': '2px solid',
+                    'border-color': '#333'
+                }
+            )
+        ], style={'position': 'absolute',
+                  'top': '115vh',
+                  'left': '2vw'
+                  })
+
         return div

@@ -49,7 +49,6 @@ def total_subjects_pie_chart_count(selected_data: dict, df: pd.DataFrame):
     filtered_df['QC Status'] = np.where(
         filtered_df['Output QC'] == 1, "Success", "Failed")
     qc_status_counts = filtered_df['QC Status'].value_counts()
-    print(qc_status_counts)
     outer_pie = go.Pie(
         values=[qc_status_counts[0], qc_status_counts[1]],
         hole=1,
@@ -65,8 +64,8 @@ def total_subjects_pie_chart_count(selected_data: dict, df: pd.DataFrame):
     )
     fig = go.Figure(data=[outer_pie, inner_pie], layout=layout)
     fig.update_layout(
-        width=90,  # Minimum width
-        height=90,  # Minimum height
+        width=125,  # Minimum width
+        height=125,  # Minimum height
         margin=dict(l=10, r=10, t=10, b=10),  # Adjust margins for spacing
         autosize=False,  # Disable autosizing
     )
@@ -83,7 +82,6 @@ def total_sessions_pie_chart_count(selected_data: dict, df: pd.DataFrame):
     filtered_df['QC Status'] = np.where(
         filtered_df['Output QC'] == 1, "Success", "Failed")
     qc_status_counts = filtered_df['QC Status'].value_counts()
-    print(qc_status_counts)
     outer_pie = go.Pie(
         values=[qc_status_counts[0], qc_status_counts[1]],
         hole=1,
@@ -99,8 +97,8 @@ def total_sessions_pie_chart_count(selected_data: dict, df: pd.DataFrame):
     )
     fig = go.Figure(data=[outer_pie, inner_pie], layout=layout)
     fig.update_layout(
-        width=90,  # Minimum width
-        height=90,  # Minimum height
+        width=125,  # Minimum width
+        height=125,  # Minimum height
         margin=dict(l=10, r=10, t=10, b=10),  # Adjust margins for spacing
         autosize=False,  # Disable autosizing
     )
@@ -116,7 +114,6 @@ def total_images_pie_chart_count(selected_data: dict, df: pd.DataFrame):
     filtered_df['QC Status'] = np.where(
         filtered_df['Output QC'] == 1, "Success", "Failed")
     qc_status_counts = filtered_df['QC Status'].value_counts()
-    print(qc_status_counts)
     outer_pie = go.Pie(
         values=[qc_status_counts[0], qc_status_counts[1]],
         hole=1,
@@ -132,8 +129,8 @@ def total_images_pie_chart_count(selected_data: dict, df: pd.DataFrame):
     )
     fig = go.Figure(data=[outer_pie, inner_pie], layout=layout)
     fig.update_layout(
-        width=90,  # Minimum width
-        height=90,  # Minimum height
+        width=125,  # Minimum width
+        height=125,  # Minimum height
         margin=dict(l=10, r=10, t=10, b=10),  # Adjust margins for spacing
         autosize=False,  # Disable autosizing
     )
@@ -156,6 +153,32 @@ def update_site_distribution(selected_data: dict, df: pd.DataFrame):
         y='Age',
         category_orders={"Site": sorted_sites}
     )
+
+    return fig
+
+
+def update_sex_plot(selected_data: dict, df: pd.DataFrame):
+
+    if selected_data is not None:
+        selected_points = [point['x'] for point in selected_data['points']]
+        filtered_df = df[df['Output QC'].isin(selected_points)]
+    else:
+        filtered_df = df
+
+    filtered_df = filtered_df[filtered_df['Sex'].isin(['F', 'M'])]
+    filtered_df = filtered_df.drop_duplicates(subset=['Subject', 'Session'])
+    sex_counts = filtered_df['Sex'].value_counts()
+
+    fig = go.Figure()
+
+    fig.add_trace(go.Bar(
+        x=sex_counts.index,
+        y=sex_counts.values,
+        marker_color=['#1f77b4', '#ff0000'],  # Blue for M, Red for F
+        text=sex_counts.values,
+        textposition='auto',
+        hoverinfo='x+y+text',  # Show both x and y values in hover text
+    ))
 
     return fig
 
@@ -186,5 +209,15 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame):
         Output('site_distribution', 'figure'),
         [Input('site_distribution', 'selectedData')]
     )(lambda selected_data: update_site_distribution(selected_data, df))
+
+    app.callback(
+        Output('sex_bar_plot', 'figure'),
+        [Input('sex_bar_plot', 'selectedData')]
+    )(lambda selected_data: update_sex_plot(selected_data, df))
+
+    app.callback(
+        Output('site_failed_qc', 'figure'),
+        [Input('site_failed_qc', 'selectedData')]
+    )(lambda selected_data: update_site_failed_qc(selected_data, df))
 
     return

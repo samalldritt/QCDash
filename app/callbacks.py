@@ -183,6 +183,43 @@ def update_sex_plot(selected_data: dict, df: pd.DataFrame):
     return fig
 
 
+def update_site_failed_qc(selected_data, df):
+    df = df.drop_duplicates(subset=['Subject', 'Session'])
+    # Filter the data based on the selected points (if any)
+    if selected_data is not None:
+        selected_points = [point['x'] for point in selected_data['points']]
+        filtered_df = df[df['Output QC'].isin(selected_points)]
+    else:
+        filtered_df = df
+
+    # Create a pivot table to count the QC statuses for each site
+    pivot_df = pd.pivot_table(filtered_df, values='Session', index='Site',
+                              columns='QC Status', aggfunc='count', fill_value=0)
+
+    return {
+        'data': [
+            go.Bar(
+                x=pivot_df.index,
+                y=pivot_df['Success'],
+                name='Success',
+                marker=dict(color='blue')
+            ),
+            go.Bar(
+                x=pivot_df.index,
+                y=pivot_df['Failed'],
+                name='Failed',
+                marker=dict(color='red')
+            )
+        ],
+        'layout': go.Layout(
+            title='QC Sessions by Site',
+            xaxis=dict(title='Site'),
+            yaxis=dict(title='Count'),
+            barmode='group'
+        )
+    }
+
+
 def register_callbacks(app: dash.Dash, df: pd.DataFrame):
 
     app.callback(

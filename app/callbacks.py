@@ -1,4 +1,5 @@
 import dash
+from dash import html
 from dash.dependencies import Input, Output
 import plotly.express as px
 import plotly.graph_objs as go
@@ -183,7 +184,7 @@ def update_sex_plot(selected_data: dict, df: pd.DataFrame):
     return fig
 
 
-def update_site_failed_qc(selected_data, df):
+def update_site_failed_qc(selected_data: dict, df: pd.DataFrame):
     df = df.drop_duplicates(subset=['Subject', 'Session'])
     # Filter the data based on the selected points (if any)
     if selected_data is not None:
@@ -218,6 +219,20 @@ def update_site_failed_qc(selected_data, df):
             barmode='group'
         )
     }
+
+
+def update_subject_dropdown(selected_site, df: pd.DataFrame):
+    subjects_for_site = df[df['Site'] == selected_site]['Subject'].unique()
+    subject_options = [{'label': subject, 'value': subject}
+                       for subject in subjects_for_site]
+    return subject_options
+
+
+def update_displayed_image(selected_site, selected_subject, df: pd.DataFrame):
+    link = 'https://drive.google.com/uc?export=view&id=1369Huyga6V4DJBRonleQKxfsSUmLe3PK'
+
+    img = html.Img(src=link, style={'width': '95%', 'height': 'auto'})
+    return img
 
 
 def register_callbacks(app: dash.Dash, df: pd.DataFrame):
@@ -256,5 +271,15 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame):
         Output('site_failed_qc', 'figure'),
         [Input('site_failed_qc', 'selectedData')]
     )(lambda selected_data: update_site_failed_qc(selected_data, df))
+
+    app.callback(
+        Output('subject-dropdown', 'options'),
+        Input('site-dropdown', 'value')
+    )(lambda value: update_subject_dropdown(value, df))
+
+    app.callback(
+        Output('image-container', 'children'),
+        [Input('site-dropdown', 'value'), Input('subject-dropdown', 'value')]
+    )(lambda selected_site, selected_subject: update_displayed_image(selected_site, selected_subject, df))
 
     return

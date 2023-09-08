@@ -25,7 +25,8 @@ class Layout:
             self.site_distribution(),
             self.create_summary(),
             self.sex_bar_plot(),
-            self.site_failed_qc()
+            self.site_failed_qc(),
+            self.input_checker()
         ], style={'position': 'relative'})
         return layout
 
@@ -196,5 +197,48 @@ class Layout:
                   'top': '115vh',
                   'left': '2vw'
                   })
+
+        return div
+
+    def input_checker(self) -> html.Div:
+
+        div = html.Div([
+            html.H3('DCAN_in_denoised Input Checker', style={
+                    'position': 'absolute', 'top': '2vh', 'left': '2vw'}),
+
+            html.Div([
+                html.Label('Select a site:'),
+                dcc.Dropdown(
+                    id='site-dropdown',
+                    options=[{'label': site, 'value': site}
+                             for site in list(self.df['Site'].dropna().unique())],
+                    value=self.df['Site'].iloc[0],
+                    style={'width': '150px'}
+                )
+            ], style={'position': 'absolute',
+                      'top': '2vh',
+                      'left': '35vw'}),
+            html.Div([
+                html.Label('Select a subject:'),
+                dcc.Dropdown(
+                    id='subject-dropdown'
+                )
+            ], style={'position': 'absolute',
+                      'top': '2vh',
+                      'left': '45vw'}),
+
+            html.Div(id='image-container', style={'position': 'absolute',
+                                                  'top': '10vh',
+                                                  'left': '2vw'})
+        ], style={
+            'position': 'absolute',
+            'top': '150vh',  # Adjust the top position as needed
+            'left': '2vw',
+            'height': '65vh',  # Adjust the height as needed
+            'width': '95vw',   # Adjust the width as needed
+            'border': '2px solid',
+            'border-color': '#333',
+            'backgroundColor': '#ffffff'
+        })
 
         return div
